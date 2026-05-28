@@ -149,11 +149,24 @@ class ColumnWorkerTest {
             worker.start();
 
             boolean sawNulls = false;
+            boolean sawPartialTail = false;
             BatchExchange.Batch batch;
             while ((batch = exchange.poll()) != null) {
-                if (batch.validity != null
-                        && batch.validity.cardinality() < batch.recordCount) {
-                    sawNulls = true;
+                if (batch.validity != null) {
+                    // Load-bearing invariant: BatchMatchers index into
+                    // `validity` by `(recordCount + 63) >>> 6` without
+                    // bounds-checking. If the publisher ever emits a
+                    // shorter or longer array, the matchers will AIOBE
+                    // or read stale words.
+                    assertThat(batch.validity.length)
+                            .as("validity.length must equal (recordCount + 63) >>> 6")
+                            .isEqualTo((batch.recordCount + 63) >>> 6);
+                    if ((batch.recordCount & 63) != 0) {
+                        sawPartialTail = true;
+                    }
+                    if (popcount(batch.validity) < batch.recordCount) {
+                        sawNulls = true;
+                    }
                 }
                 exchange.recycle(batch);
             }
@@ -162,6 +175,9 @@ class ColumnWorkerTest {
 
             assertThat(sawNulls)
                     .as("Nullable column should have null values in at least one batch")
+                    .isTrue();
+            assertThat(sawPartialTail)
+                    .as("Test should exercise at least one batch with a partial-tail recordCount")
                     .isTrue();
         }
     }
@@ -486,5 +502,13 @@ class ColumnWorkerTest {
         }
         exchange.checkError();
         return totalRows;
+    }
+
+    private static int popcount(long[] words) {
+        int sum = 0;
+        for (long w : words) {
+            sum += Long.bitCount(w);
+        }
+        return sum;
     }
 }

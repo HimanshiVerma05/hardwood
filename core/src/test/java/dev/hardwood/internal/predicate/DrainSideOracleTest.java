@@ -11,11 +11,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -429,14 +425,16 @@ class DrainSideOracleTest {
             return b;
         }
 
-        private static BitSet nullsToValidity(BitSet nulls) {
+        private static long[] nullsToValidity(BitSet nulls) {
             if (nulls.isEmpty()) {
                 return null;
             }
             BitSet validity = new BitSet(N);
             validity.set(0, N);
             validity.andNot(nulls);
-            return validity;
+            int wordsLen = (N + 63) >>> 6;
+            long[] words = validity.toLongArray();
+            return words.length < wordsLen ? Arrays.copyOf(words, wordsLen) : words;
         }
     }
 
