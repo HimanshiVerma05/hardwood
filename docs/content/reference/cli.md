@@ -13,7 +13,8 @@
 
 The `hardwood` CLI lets you inspect and convert Parquet files from the command line — useful for exploring datasets, debugging file structure, and quick format conversions without writing Java code. It reads local files and S3 URIs, and ships as a GraalVM native binary with instant startup.
 
-Pre-built native binaries for Linux, macOS, and Windows are available from the [release page](https://github.com/hardwood-hq/hardwood/releases/tag/{{cli_release_tag}}).
+Pre-built native binaries for Linux, macOS, and Windows are available from the [release page](https://github.com/hardwood-hq/hardwood/releases/tag/{{cli_release_tag}}). You can also
+run the CLI via Docker without installing it locally — see the [Docker section below](#docker).
 
 !!! note "macOS"
     The binary is not notarized. On first run, macOS Gatekeeper will block it. Remove the quarantine flag after extracting:
@@ -235,3 +236,35 @@ source hardwood_completion
 ```
 
 To make it permanent, add the line above to your `~/.bashrc` or `~/.bash_profile`.
+
+## Docker
+
+A minimal Fedora-based Docker image is published to Docker Hub for Linux amd64 and arm64:
+
+```shell
+docker pull hardwood/hardwood:{{cli_release_tag}}
+```
+
+Run any command by passing it after the image name:
+
+```shell
+docker run --rm hardwood/hardwood:{{cli_release_tag}} --help
+docker run --rm hardwood/hardwood:{{cli_release_tag}} info -f /data/data.parquet
+```
+
+Mount a local directory to access files on the host:
+
+```shell
+docker run --rm \
+  -v "$(pwd)":/data \
+  hardwood/hardwood:{{cli_release_tag}} \
+  schema -f /data/data.parquet
+```
+
+Start an interactive shell with tab completion pre-loaded:
+
+```shell
+docker run --rm -it \
+  -v "$(pwd)":/data \
+  hardwood/hardwood:{{cli_release_tag}}
+```
