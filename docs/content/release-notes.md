@@ -24,11 +24,13 @@ Highlights of this release:
 - Float and double row group and page pruning honors the file's column order, with `ColumnOrder` surfaced on the API; `ResolvedPredicate` float/double convenience constructors are now public
 - Legacy list encodings from older writers — un-annotated repeated fields and 2-level lists — are recognized as lists
 - MAP columns without a value field (key-only `key_value` groups) are read instead of throwing
-- `ColumnReader` and `RowReader` `close()` methods are now idempotent, fixing a close-time performance regression introduced in Beta2
-- Logical types render as Parquet-style annotation tokens (e.g. `STRING`) instead of a misleading record `toString()`
+- Sub-field projections into MAP values and VARIANT groups pull in the structural columns they require (the MAP's key, every VARIANT leaf)
+- `AvroRowReader` honors column projections, and DECIMAL, UUID, UINT_32, and FIXED columns now read correctly
+- The multi-file `Hardwood` entry point accepts a caller-supplied `HardwoodContext`, for control over decoder thread-pool sizing and sharing a context across readers
+- `ColumnReader` and `RowReader` `close()` methods are now idempotent, fixing a close-time performance regression from Beta2
+- Logical types render as Parquet-style annotation tokens (e.g. `STRING`)
 - `hardwood dive` fails fast with a clear message when stdout is not an interactive terminal
 - `hardwood print` short option names follow the conventional single-dash, single-character form (`-s`, `-w`, `-i`, `-d`); `--transpose` is long-only
-- Documentation and tooling polish: corrected Docker image tags in the published docs, a single unified API change report linking each version to its commit, and stable JavaDoc diagrams
 
 See the [1.0.0.Final milestone](https://github.com/hardwood-hq/hardwood/milestone/7?closed=1) on GitHub for the full list of resolved issues.
 
